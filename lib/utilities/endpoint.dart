@@ -3,7 +3,7 @@ class MSConfig {
   static const String mioPc = 'localhost';
 }
 class ApiConfig {
-  static const String baseUrl = 'https://192.168.68.56:7124';
+  static const String baseUrl = 'https://freetimeai.freeddns.org';
 }
 
 class freeTimeAi{

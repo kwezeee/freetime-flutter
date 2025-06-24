@@ -1,28 +1,23 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
+import 'package:dio/io.dart'; // kept for optional certificate‑pinning
+
 import '../services/token_store.dart';
 import '../models/jwt.dart';
 import '../utilities/endpoint.dart';
 
+/// Centralised client for all user‑related endpoints (login, register, email‑exists)
+/// Now points to the production BE and refuses insecure certificates.
 class UserApi {
   UserApi._() {
     final options = BaseOptions(
-      baseUrl: ApiConfig.baseUrl,
+      baseUrl: ApiConfig.baseUrl, // https://freetimeai.freeddns.org
       connectTimeout: const Duration(seconds: 20),
       receiveTimeout: const Duration(seconds: 20),
       contentType: Headers.jsonContentType,
     );
     _dio = Dio(options);
 
-    // ───── Disabilita verifica SSL solo per '192.168.68.56' ─────
-    final adapter = IOHttpClientAdapter();
-    adapter.createHttpClient = () {
-      final client = HttpClient();
-      client.badCertificateCallback = (cert, host, port) => host == '192.168.68.56';
-      return client;
-    };
-    _dio.httpClientAdapter = adapter;
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
@@ -33,7 +28,8 @@ class UserApi {
         return handler.next(options);
       },
       onError: (e, handler) {
-        print('Dio error ► ${e.message}  status: ${e.response?.statusCode}');
+        // Avoid leaking sensitive data in production logs.
+        // Use your own logger instead of print.
         return handler.next(e);
       },
     ));
@@ -42,7 +38,7 @@ class UserApi {
   late final Dio _dio;
   static final instance = UserApi._();
 
-  /// Ritorna `true` se l’e-mail esiste (200), `false` se 404.
+  /// Returns `true` if the e‑mail exists (HTTP 200), `false` if 404.
   Future<bool> userExists(String email) async {
     try {
       await _dio.post('/users/exists', data: {'email': email});
