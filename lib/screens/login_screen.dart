@@ -1,6 +1,7 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:dio/dio.dart';
+
 import '../repositories/auth_repository.dart';
 import '../utilities/divider.dart';
 import '../widgets/email_input.dart';
@@ -8,6 +9,9 @@ import '../widgets/continue_button.dart';
 import '../widgets/google_button.dart';
 import 'auth_password_screen.dart';
 
+//--------------------------------------------------
+// LoginScreen → asks only for e‑mail, decides login vs sign‑up
+//--------------------------------------------------
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,15 +21,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
-  bool _isButtonEnabled = false;
+  bool _enabled = false;
   bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _emailController.addListener(() {
-      setState(() => _isButtonEnabled = _emailController.text.isNotEmpty);
-    });
+    _emailController.addListener(() =>
+        setState(() => _enabled = _emailController.text.trim().isNotEmpty));
   }
 
   @override
@@ -34,47 +37,44 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleContinue() async {
+  Future<void> _continue() async {
     final email = _emailController.text.trim();
-
-    // semplice validazione lato client
-    final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[a-zA-Z]{2,}$');
+    // semplice validazione lato client (RFC 5322 semplificata)
+    final emailRegex = RegExp(
+        r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+    );
     if (!emailRegex.hasMatch(email)) {
-      _shakeAndToast('Email non valida');
+      _toast('E‑mail non valida');
       return;
     }
 
     setState(() => _loading = true);
     try {
       final exists = await context.read<AuthRepository>().checkEmail(email);
-      setState(() => _loading = false);
-
-      final route = MaterialPageRoute(
-        builder: (_) => AuthPasswordScreen(
-          email: email,
-          isLogin: exists,   // traue ⇒ login, false ⇒ registrazione
-        ),
-      );
-
-
       if (!mounted) return;
-      Navigator.of(context).push(route);
-    } on DioException catch (e) {
-      debugPrint('Network error: ${e.message}');
-      _shakeAndToast('Impossibile contattare il server');
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => AuthPasswordScreen(email: email, isLogin: exists),
+      ));
+    } on DioException {
+      _toast('Errore di rete, riprova');
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  void _shakeAndToast(String message) {
-    // puoi sostituire con una vera animation "shake"
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
+  void _toast(String m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: const BackButton(color: Colors.white),
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -84,8 +84,8 @@ class _LoginScreenState extends State<LoginScreen> {
               EmailInputField(controller: _emailController),
               const SizedBox(height: 16),
               ContinueButton(
-                enabled: _isButtonEnabled && !_loading,
-                onPressed: _isButtonEnabled ? _handleContinue : null,
+                enabled: _enabled && !_loading,
+                onPressed: _enabled ? _continue : null,
                 child: _loading
                     ? const SizedBox.square(
                   dimension: 18,
@@ -94,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     valueColor: AlwaysStoppedAnimation(Colors.white),
                   ),
                 )
-                    : const Text('Continue'),
+                    : const Text('Continua'),
               ),
               const SizedBox(height: 24),
               const OrDivider(),
