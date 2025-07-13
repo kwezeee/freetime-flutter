@@ -9,10 +9,8 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        // Repo: logica di rete / token
-        Provider<AuthRepository>(create: (_) => AuthRepository()),
-        // State-manager (facoltativo ma consigliato)
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        Provider<AuthRepository>(create: (_) => AuthRepository(), lazy: true),
+        ChangeNotifierProvider(create: (_) => AuthProvider(), lazy: true),
       ],
       child: const MyApp(),
     ),

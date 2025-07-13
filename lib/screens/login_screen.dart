@@ -1,3 +1,4 @@
+// lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
@@ -9,9 +10,6 @@ import '../widgets/continue_button.dart';
 import '../widgets/google_button.dart';
 import 'auth_password_screen.dart';
 
-//--------------------------------------------------
-// LoginScreen → asks only for e‑mail, decides login vs sign‑up
-//--------------------------------------------------
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -27,8 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _emailController.addListener(() =>
-        setState(() => _enabled = _emailController.text.trim().isNotEmpty));
+    _emailController.addListener(
+            () => setState(() => _enabled = _emailController.text.trim().isNotEmpty));
   }
 
   @override
@@ -39,12 +37,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _continue() async {
     final email = _emailController.text.trim();
-    // semplice validazione lato client (RFC 5322 semplificata)
-    final emailRegex = RegExp(
-        r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
-    );
+    final emailRegex =
+    RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
     if (!emailRegex.hasMatch(email)) {
-      _toast('E‑mail non valida');
+      _toast('E-mail non valida');
       return;
     }
 
@@ -70,10 +66,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
+      // ⬇︎ nessun BackButton sulla prima schermata
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        leading: const BackButton(color: Colors.white),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -89,12 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: _loading
                     ? const SizedBox.square(
                   dimension: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                  ),
+                  child:
+                  CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
                 )
-                    : const Text('Continua'),
+                    : const Text('Continue'),
               ),
               const SizedBox(height: 24),
               const OrDivider(),

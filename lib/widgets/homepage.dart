@@ -1,4 +1,4 @@
-import 'dart:ui'; // <- necessario per ImageFilter
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../screens/explore_screen.dart';
@@ -106,17 +106,17 @@ class AnimatedWaterRefraction extends StatefulWidget {
   final double opacity;
   final int waveCount;
 
-  const AnimatedWaterRefraction({
+  const AnimatedWaterRefraction({super.key,
     this.opacity = 0.2,
     this.waveCount = 2,
   });
 
   @override
-  _AnimatedWaterRefractionState createState() =>
-      _AnimatedWaterRefractionState();
+  AnimatedWaterRefractionState createState() =>
+      AnimatedWaterRefractionState();
 }
 
-class _AnimatedWaterRefractionState extends State<AnimatedWaterRefraction>
+class AnimatedWaterRefractionState extends State<AnimatedWaterRefraction>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl = AnimationController(
     vsync: this,

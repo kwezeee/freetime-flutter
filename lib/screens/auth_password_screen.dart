@@ -1,14 +1,22 @@
 import 'package:dio/dio.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../provider/auth_provider.dart';
+import '../utilities/app_theme.dart';
 import '../widgets/continue_button.dart';
 import '../widgets/homepage.dart';
 
 class AuthPasswordScreen extends StatefulWidget {
+  const AuthPasswordScreen({
+    super.key,
+    required this.email,
+    required this.isLogin,
+  });
+
   final String email;
   final bool isLogin;
-  const AuthPasswordScreen({super.key, required this.email, required this.isLogin});
 
   @override
   State<AuthPasswordScreen> createState() => _AuthPasswordScreenState();
@@ -16,13 +24,14 @@ class AuthPasswordScreen extends StatefulWidget {
 
 class _AuthPasswordScreenState extends State<AuthPasswordScreen> {
   final _pwdCtrl = TextEditingController();
-  bool _enabled = false;
   bool _loading = false;
+
+  bool get _enabled => _pwdCtrl.text.trim().length >= 6 && !_loading;
 
   @override
   void initState() {
     super.initState();
-    _pwdCtrl.addListener(() => setState(() => _enabled = _pwdCtrl.text.length >= 6));
+    _pwdCtrl.addListener(() => setState(() {}));
   }
 
   @override
@@ -31,9 +40,26 @@ class _AuthPasswordScreenState extends State<AuthPasswordScreen> {
     super.dispose();
   }
 
+  // ------------------------------------------------------------
+  // UI helper: vetro bianco 20 % con padding uniforme
+  // ------------------------------------------------------------
+  InputDecoration _glassDecoration({String? hint, Widget? prefixIcon}) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: prefixIcon,
+      filled: true,
+      fillColor: Colors.white.withAlpha(20),
+      border: InputBorder.none,
+      contentPadding:
+      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
   Future<void> _submit() async {
+    if (!_enabled) return;
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
+
     try {
       if (widget.isLogin) {
         await auth.login(widget.email, _pwdCtrl.text.trim());
@@ -43,21 +69,15 @@ class _AuthPasswordScreenState extends State<AuthPasswordScreen> {
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomePage()),
-            (route) => false,
+            (_) => false,
       );
     } on DioException catch (e) {
-      late final String msg;
-      switch (e.response?.statusCode) {
-        case 409:
-          msg = 'E‑mail già in uso';
-          break;
-        case 401:
-        case 404:
-          msg = 'Credenziali non valide';
-          break;
-        default:
-          msg = 'Errore, riprova';
-      }
+      final code = e.response?.statusCode;
+      final msg = switch (code) {
+        409 => 'E-mail already used',
+        401 || 404 => 'Invalid credentials',
+        _ => 'Error, try again',
+      };
       _toast(msg);
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -69,14 +89,18 @@ class _AuthPasswordScreenState extends State<AuthPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.isLogin ? 'Accedi' : 'Crea account';
+    final title = widget.isLogin ? 'Sign in' : 'Create account';
+
     return Scaffold(
+      // 🔑 stesse impostazioni della LoginScreen
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
+
       appBar: AppBar(
-        elevation: 0,
         backgroundColor: Colors.transparent,
-        leading: const BackButton(color: Colors.white),
+        elevation: 0,
+        leading: const BackButton(),
+        title: Text(title),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -84,42 +108,47 @@ class _AuthPasswordScreenState extends State<AuthPasswordScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(title, style: Theme.of(context).textTheme.headlineMedium),
-              const SizedBox(height: 24),
-              // e‑mail (readonly) so the user always sees what was typed
-              TextField(
-                readOnly: true,
-                controller: TextEditingController(text: widget.email),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.mail_outline, size: 20),
-                  filled: true,
-                  fillColor: Colors.white.withAlpha(20),
-                  border:  SquircleBorder(side: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              // E-mail readonly (squircle vetro)
+              ClipSmoothRect(
+                radius: AppTheme.radius,
+                child: TextFormField(
+                  readOnly: true,
+                  initialValue: widget.email,
+                  decoration: _glassDecoration(
+                    prefixIcon: const Icon(Icons.mail_outline, size: 20),
+                  ),
                 ),
               ),
+
               const SizedBox(height: 12),
-              TextField(
-                controller: _pwdCtrl,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: 'Password',
-                  filled: true,
-                  fillColor: Colors.white.withAlpha(20),
-                  border:  SquircleBorder(side: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+
+              // Password (squircle vetro)
+              ClipSmoothRect(
+                radius: AppTheme.radius,
+                child: TextFormField(
+                  controller: _pwdCtrl,
+                  obscureText: true,
+                  autofillHints: [
+                    widget.isLogin
+                        ? AutofillHints.password
+                        : AutofillHints.newPassword
+                  ],
+                  decoration: _glassDecoration(hint: 'Password'),
                 ),
               ),
+
               const SizedBox(height: 16),
+
+              // Pulsante primario
               ContinueButton(
-                enabled: _enabled && !_loading,
+                enabled: _enabled,
                 onPressed: _enabled ? _submit : null,
                 child: _loading
                     ? const SizedBox.square(
                   dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 )
-                    : Text(widget.isLogin ? 'Accedi' : 'Crea'),
+                    : Text(widget.isLogin ? 'Sign in' : 'Create'),
               ),
             ],
           ),
@@ -128,12 +157,3 @@ class _AuthPasswordScreenState extends State<AuthPasswordScreen> {
     );
   }
 }
-
-//--------------------------------------------------
-// Helper: Figma squircle shape
-//--------------------------------------------------
-class SquircleBorder extends OutlineInputBorder {
-   SquircleBorder({BorderSide side = BorderSide.none})
-      : super(borderRadius: BorderRadius.all(Radius.circular(28)), borderSide: side);
-}
-
