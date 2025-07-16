@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tempo_libero/provider/auth_provider.dart';
+import 'package:tempo_libero/widgets/homepage.dart';
 
 import 'repositories/auth_repository.dart';
 import 'screens/login_screen.dart';
@@ -39,7 +40,8 @@ class MyApp extends StatelessWidget {
           child: child,
         );
       },
-      home: const LoginScreen(),
+      home: const HomePage(),
+      //home: const LoginScreen(),
     );
   }
 }
