@@ -1,13 +1,13 @@
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:figma_squircle/figma_squircle.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
-
+import 'dart:math' as math;
 import '../screens/home_screen.dart';
 import '../screens/week_screen.dart';
 import '../screens/explore_screen.dart';
-import '../screens/profile_screen.dart'; // ← nuovo
+import '../screens/profile_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,6 +25,44 @@ class _HomePageState extends State<HomePage> {
     WeekScreen(),
     ProfileScreen(),
   ];
+
+  // =========  G L A S S   P R E S E T S  =========
+  static const kOuterNavGlass = LiquidGlassSettings(
+    glassColor: Color(0x1F000000),      // ≈ Colors.black12, ma in alpha
+    thickness: 30,
+    blur: 4,
+    chromaticAberration: 13,
+    blend: 20,
+    lightAngle: 0.4 * math.pi,
+    lightIntensity: 5.0,
+    ambientStrength: 3.0,
+    refractiveIndex: 1.22,
+  );
+
+  static const kInnerNavGlass = LiquidGlassSettings(
+    glassColor: Color(0x19FFFFFF),      // ≈ Colors.white10
+    thickness: 16,
+    blur: 6,
+    chromaticAberration: .20,
+    blend: 20,
+    lightAngle: 0.25 * math.pi,
+    lightIntensity: 2.0,
+    ambientStrength: .6,
+    refractiveIndex: 1.51,
+  );
+
+  static const kExploreGlass = LiquidGlassSettings(
+    glassColor: Color(0x19FFFFFF),
+    thickness: 22,
+    blur: 4,
+    chromaticAberration: .01,
+    blend: 20,
+    lightAngle: -0.25 * math.pi,
+    lightIntensity: 1.0,
+    ambientStrength: .7,
+    refractiveIndex: 1.51,
+  );
+
 
   // =================  H O M E   P A G E  =================
   @override
@@ -60,64 +98,102 @@ class _HomePageState extends State<HomePage> {
   }
 
 
-// ----------------  P I L L  B A R  ----------------
+  // ---------------  P I L L  B A R  ---------------
   Widget _buildPillBar() {
+    const barH   = 62.0;
+    const pillH  = 48.0;
+    const pillR  = 40.0;
+    const pillHP = 6.0;
+    const animD  = Duration(milliseconds: 320);
+    const items  = 3;
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        const barH   = 62.0;
-        const pillH  = 48.0;
-        const pillR  = 40.0;
-        const pillHP = 6.0;
-        const animD  = Duration(milliseconds: 320);
-        const items  = 3;
         final step   = constraints.maxWidth / items;
         final pWidth = step - pillHP * 2;
         final alignX = -1 + 2 * _currentIndex / (items - 1);
 
-        return ClipSmoothRect(
-          radius: SmoothBorderRadius(cornerRadius: 40, cornerSmoothing: .6),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-            child: Container(
-              height: barH,
-              decoration: ShapeDecoration(
-                color: Colors.white.withAlpha(31),
-                shape: SmoothRectangleBorder(
-                  borderRadius: SmoothBorderRadius(cornerRadius: 40, cornerSmoothing: .6),
-                  side: BorderSide(color: Colors.white.withAlpha(77), width: 1.5),
-                ),
-              ),
-              child: Stack(
-                children: [
-                  const Positioned.fill(
-                    child: AnimatedWaterRefraction(opacity: .25, waveCount: 8),
+        // ——— 1 · altezza fissata  ———
+        return SizedBox(
+          height: barH,
+          width: double.infinity,
+          child: ClipSmoothRect(
+            key: const ValueKey('pillBarRoot'),
+            radius: SmoothBorderRadius(
+              cornerRadius: 40,
+              cornerSmoothing: .6,
+            ),
+            child: Stack(
+              fit: StackFit.expand,   // riempie tutto il SizedBox
+              children: [
+                // vetro ----------------------------------------------------------
+                Positioned.fill(
+                  child: LiquidGlass(
+                    shape: const LiquidRoundedSuperellipse(
+                      borderRadius: Radius.circular(40),
+                    ),
+                    glassContainsChild: false,
+                    settings: kOuterNavGlass,
+                    child: const SizedBox.shrink(),
                   ),
+                ),
 
-                  // ---  PILL SCORREVOLE  ---
-                  AnimatedAlign(
-                    duration: animD,
-                    curve: Curves.easeOutQuart,
-                    alignment: Alignment(alignX, 0),
-                    child: Transform.translate(
-                      offset: Offset(-alignX * pillHP, 0),
-                      child: SizedBox(
-                        width: pWidth,
-                        height: pillH,
-                        child: ClipSmoothRect(
-                          radius: SmoothBorderRadius(
-                              cornerRadius: pillR, cornerSmoothing: 0.6),
-                          child: Container(color: Colors.white.withAlpha(45)),
+                // stroke ---------------------------------------------------------
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: ShapeDecoration(
+                        shape: SmoothRectangleBorder(
+                          borderRadius: SmoothBorderRadius(
+                            cornerRadius: 40,
+                            cornerSmoothing: .6,
+                          ),
+                          side: const BorderSide(
+                            color: Color(0x33FFFFFF), // 20 % white
+                            width: 1.0,
+                            strokeAlign: BorderSide.strokeAlignInside, // evita bleed su DPR alti
+                          ),
                         ),
                       ),
                     ),
                   ),
+                ),
 
-                  // ---  VOCI NAV  ---
-                  Row(
-                    children: List.generate(items, (i) => Expanded(child: _buildNavItem(i))),
+                // contenuto (pill + icone) ---------------------------------------
+                AnimatedAlign(
+                  duration: animD,
+                  curve: Curves.easeOutQuart,
+                  alignment: Alignment(alignX, 0),
+                  child: Transform.translate(
+                    offset: Offset(-alignX * pillHP, 0),
+                    child: ClipSmoothRect(
+                      radius: SmoothBorderRadius(
+                        cornerRadius: pillR,
+                        cornerSmoothing: .6,
+                      ),
+                      child: SizedBox(
+                        width: pWidth,
+                        height: pillH,
+                        child: LiquidGlass(
+                          glassContainsChild: false,
+                          shape: const LiquidRoundedSuperellipse(
+                            borderRadius: Radius.circular(pillR),
+                          ),
+                          settings: kInnerNavGlass,
+                          child: const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
                   ),
-                ],
-              ),
+                ),
+                // voci nav --------------------------------------------------------
+                Row(
+                  children: List.generate(
+                    items,
+                        (i) => Expanded(child: _buildNavItem(i)),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -162,28 +238,41 @@ class _HomePageState extends State<HomePage> {
 
   // ----------------  F L O A T I N G  E X P L O R E  ----------------
   Widget _buildExploreButton() {
-    const double size = 62;            // diametro = pillH
-    return ClipOval(
-      child: GestureDetector(
-        onTap: () => Navigator.push(context,
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const ExploreScreen(),
-            transitionDuration: const Duration(milliseconds: 320),
-            transitionsBuilder: (_, anim, __, child) =>
-                FadeTransition(opacity: CurvedAnimation(parent: anim, curve: Curves.easeOutQuart), child: child),
-          ),
-        ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(31),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withAlpha(77), width: 1.5),
+    const double size = 62; // = pillH
+    return LiquidGlass(
+      shape: const LiquidRoundedSuperellipse(
+        borderRadius: Radius.circular(size / 2),
+      ),
+      glassContainsChild: false,
+      settings: const LiquidGlassSettings(
+        blur: 4,
+        thickness: 22,
+        ambientStrength: 0.7,
+        lightAngle: -0.25 * math.pi,
+        glassColor: Colors.white10,
+      ),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const ExploreScreen(),
+              transitionDuration: const Duration(milliseconds: 320),
+              transitionsBuilder: (_, anim, __, child) => FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: anim,
+                  curve: Curves.easeOutQuart,
+                ),
+                child: child,
+              ),
             ),
-            child: const Icon(CupertinoIcons.search, size: 24, color: Colors.white),
+          ),
+          child: const Icon(
+            CupertinoIcons.search,
+            size: 24,
+            color: Colors.white,
           ),
         ),
       ),
@@ -191,68 +280,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// Effetto di “rifrazione” animata: più onde sovrapposte
-class AnimatedWaterRefraction extends StatefulWidget {
-  final double opacity;
-  final int waveCount;
-
-  const AnimatedWaterRefraction({
-    super.key,
-    this.opacity = 0.2,
-    this.waveCount = 2,
-  });
-
-  @override
-  AnimatedWaterRefractionState createState() => AnimatedWaterRefractionState();
-}
-
-class AnimatedWaterRefractionState extends State<AnimatedWaterRefraction>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 6),
-  )..repeat();
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) {
-        return Stack(
-          children: List.generate(widget.waveCount, (i) {
-            final phase = (_ctrl.value + i / widget.waveCount) % 1.0;
-            final offsetY = (phase * 2 - 1) * 4; // [-4, 4]
-            return Transform.translate(
-              offset: Offset(0, offsetY),
-              child: Opacity(
-                opacity: widget.opacity,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment(0, -0.5 + i * 0.5),
-                      radius: 1.2,
-                      colors: [
-                        Colors.white.withAlpha(20), // ~0.08
-                        Colors.white.withAlpha(0),
-                      ],
-                      stops: const [0.0, 1.0],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
-        );
-      },
-    );
-  }
-}
 class _BottomVeloScrim extends StatelessWidget {
   final double height;
   const _BottomVeloScrim({super.key, required this.height});
@@ -288,7 +315,7 @@ class _BottomVeloScrim extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.transparent,
-                  Color.fromARGB(153, 6, 15, 50),
+                  Color.fromARGB(153, 1, 2, 7),
                 ],
               ),
             ),

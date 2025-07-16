@@ -1,11 +1,17 @@
+import 'package:figma_squircle/figma_squircle.dart';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../design/design_system.dart';
+import '../widgets/card_deck.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/leisure_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final pageCtrl = PageController(viewportFraction: 1.0);
     return Stack(
       children: [
         SafeArea(
@@ -45,48 +51,28 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // Card orizzontali
-                SizedBox(
-                  height: 280,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: 5,
-                    separatorBuilder: (_, __) => const SizedBox(width: 16),
-                    itemBuilder: (context, index) => Stack(
-                      children: [
-                        Card(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24)),
-                          elevation: 4,
-                          clipBehavior: Clip.antiAlias,
-                          child: SizedBox(
-                            width: 200,
-                            height: 260,
-                            child: Container(
-                              color: Theme.of(context).cardColor,
-                              alignment: Alignment.center,
-                              child: Text(
-                                'Card #${index + 1}',
-                                style:
-                                Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: -4,
-                          bottom: 0,
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: Colors.white,
-                            child: Icon(Icons.add,
-                                color: Theme.of(context).primaryColor),
-                          ),
-                        ),
-                      ],
+              SizedBox(
+                height: 320,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const FanDeck(itemCount: 5), // nuova gestione
+
+                    Positioned(
+                      right: 16,
+                      child: FloatingActionButton(
+                        onPressed: () {
+                          // puoi recuperare l’indice corrente con
+                          // int idx = (context.findAncestorStateOfType<_FanDeckState>())!.currentIndex;
+                        },
+                        shape: SmoothRectangleBorder(borderRadius: AppShapes.card),
+                        child: const Icon(Icons.add),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
+              ),
+
                 const SizedBox(height: 32),
 
                 // GlassCard in colonna
