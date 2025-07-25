@@ -21,7 +21,6 @@ class ExploreScreen extends StatelessWidget {
             const Spacer(),
             GlassCard(
               height: 50,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: const [
                   Icon(Icons.search_outlined, color: Colors.white70),

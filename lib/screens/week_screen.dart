@@ -79,9 +79,9 @@ class WeekScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const GlassCard(height: 120),
+
             const SizedBox(height: 16),
-            const GlassCard(height: 120),
+
           ],
         ),
       ),

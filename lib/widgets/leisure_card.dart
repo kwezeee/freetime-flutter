@@ -1,23 +1,34 @@
-import 'package:flutter/material.dart';
 import 'package:figma_squircle/figma_squircle.dart';
-import '../design/design_system.dart';
+import 'package:flutter/material.dart';
 
 class LeisureCard extends StatelessWidget {
+  const LeisureCard({
+    super.key,
+    required this.child,
+    this.height = 300,
+    this.width  = 280,       // ⬅️ nuova larghezza più “snella”
+  });
+
   final Widget child;
-  const LeisureCard({required this.child, super.key});
+  final double height;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: 4,
-      clipBehavior: Clip.antiAlias,
-      shape: SmoothRectangleBorder(borderRadius: AppShapes.card),
-      child: Container(
-        width: 200,
-        height: 260,
-        color: Theme.of(context).cardColor,
-        alignment: Alignment.center,
-        child: child,
+    return Center(                       // centra la card nello stack
+      child: ClipSmoothRect(
+        radius: SmoothBorderRadius(
+          cornerRadius: 24,
+          cornerSmoothing: 0.6,
+        ),
+        child: Container(
+          height: height,
+          width:  width,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+          ),
+          child: child,
+        ),
       ),
     );
   }

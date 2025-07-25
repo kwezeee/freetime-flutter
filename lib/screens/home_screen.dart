@@ -56,7 +56,7 @@ class HomeScreen extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    const FanDeck(itemCount: 5), // nuova gestione
+                    const LeisureDeck(), // nuova gestione
 
                     Positioned(
                       right: 16,

@@ -28,27 +28,23 @@ class _HomePageState extends State<HomePage> {
 
   // =========  G L A S S   P R E S E T S  =========
   static const kOuterNavGlass = LiquidGlassSettings(
-    glassColor: Color(0x1F000000),      // ≈ Colors.black12, ma in alpha
-    thickness: 30,
-    blur: 4,
-    chromaticAberration: 13,
-    blend: 20,
-    lightAngle: 0.4 * math.pi,
-    lightIntensity: 5.0,
-    ambientStrength: 3.0,
-    refractiveIndex: 1.22,
+    chromaticAberration: 10,
+    blur: 10,
+    thickness: 40,
+    ambientStrength: 0.5,
+    lightAngle: -0.55 * math.pi,
+    refractiveIndex: 1.51,
   );
 
   static const kInnerNavGlass = LiquidGlassSettings(
     glassColor: Color(0x19FFFFFF),      // ≈ Colors.white10
-    thickness: 16,
-    blur: 6,
-    chromaticAberration: .20,
+    chromaticAberration: 10,
+    blur: 4,
+    thickness: 10,
+    ambientStrength: 0.7,
+    lightAngle: -0.55 * math.pi,
     blend: 20,
-    lightAngle: 0.25 * math.pi,
-    lightIntensity: 2.0,
-    ambientStrength: .6,
-    refractiveIndex: 1.51,
+    refractiveIndex: 2.22,
   );
 
   static const kExploreGlass = LiquidGlassSettings(
@@ -135,27 +131,6 @@ class _HomePageState extends State<HomePage> {
                     glassContainsChild: false,
                     settings: kOuterNavGlass,
                     child: const SizedBox.shrink(),
-                  ),
-                ),
-
-                // stroke ---------------------------------------------------------
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Container(
-                      decoration: ShapeDecoration(
-                        shape: SmoothRectangleBorder(
-                          borderRadius: SmoothBorderRadius(
-                            cornerRadius: 40,
-                            cornerSmoothing: .6,
-                          ),
-                          side: const BorderSide(
-                            color: Color(0x33FFFFFF), // 20 % white
-                            width: 1.0,
-                            strokeAlign: BorderSide.strokeAlignInside, // evita bleed su DPR alti
-                          ),
-                        ),
-                      ),
-                    ),
                   ),
                 ),
 
@@ -315,7 +290,7 @@ class _BottomVeloScrim extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.transparent,
-                  Color.fromARGB(153, 1, 2, 7),
+                  Color.fromARGB(13, 255, 255, 255),
                 ],
               ),
             ),
